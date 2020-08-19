@@ -65,7 +65,7 @@ both eng and it, then run:
 
 Finally set the locale in `/etc/locale.conf`:
 
-```ini
+```bash
 LANG=en_US.UTF-8
 ```
 
@@ -85,7 +85,7 @@ flyingcik
 
 Modify `/etc/mkinitcpio.conf` adding `keyboard`, `keymap` and `encrypt` hooks:
 
-```ini
+```bash
 HOOKS=(base udev autodetect keyboard keymap modconf block encrypt filesystems keyboard fsck)
 ```
 
@@ -105,7 +105,7 @@ Install the actual [bootloader in UEFI mode](https://wiki.archlinux.org/index.ph
 
 Configure grub to [manage the encrypted root](https://wiki.archlinux.org/index.php/Dm-crypt/System_configuration#Boot_loader) and to allow the use of my secret key on usb by setting kernel parameters in `/etc/default/grub`:
 
-```ini
+```bash
 GRUB_CMDLINE_LINUX="cryptdevice=UUID=uuid_of_the_ENCRYPTED_partition:CryptRoot cryptkey=UUID=uuid_of_the_key_partition:ext4:/key_path"
 ```
 
@@ -115,6 +115,20 @@ Write the grub configuration file:
 
 ```bash
 # grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+Save the secret key from the usb on the disk, then prepare the mounting of any other encrypted partition adding lines to `/etc/crypttab`:
+
+```bash
+CryptData   UUID=uuid_of_the_ENCRYPTED_partition    /path/to/key/on/system
+CryptBackup   UUID=uuid_of_the_ENCRYPTED_partition    /path/to/key/on/system
+```
+
+Then add these volumes to `/etc/fstab`:
+
+```bash
+/dev/mapper/CryptData   /home/data  ext4    rw,relatime,data=ordered    0   2
+/dev/mapper/CryptBackup   /home/backup  ext4    rw,relatime,data=ordered    0   2
 ```
 
 Now exit the chroot, unmount and reboot. Once logged in, fix network, if not working:
